@@ -39,7 +39,7 @@ float sensorCorrente::calculaDigitalIpp(){
       int menor=zero;
       unsigned long inicio = millis();
 
-      while(millis()-inicio < 10*periodo){
+      while(millis()-inicio < 10 * periodo){
         x=analogRead(pino)-zero;
 
           if(x<menor)
@@ -57,6 +57,7 @@ float sensorCorrente::calculaRMS(){
        float soma=0;
        float M;
        int N;
+       double int k;
        unsigned long inicio = millis();
 
         for( N=0 ; millis()-inicio < periodo; N++){
