@@ -1,0 +1,2 @@
+sensorCorrente KEYWORD1
+correnteRMS KEYWORD2
