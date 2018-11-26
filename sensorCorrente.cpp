@@ -66,6 +66,7 @@ float sensorCorrente::calculaRMS(){
         }
         return sqrt(soma/N);
 
+
 }
 float sensorCorrente::calculaCorrente(int A){
 
