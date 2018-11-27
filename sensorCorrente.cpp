@@ -33,6 +33,7 @@ void sensorCorrente::calibrar(){
 
 }
 float sensorCorrente::calculaDigitalIpp(){
+
       float periodo = (float) 1/60;
       int x;
       int maior=zero;
@@ -53,10 +54,12 @@ float sensorCorrente::calculaDigitalIpp(){
 }
 
 float sensorCorrente::calculaRMS(){
+
        float periodo= (float) 1/60;
        float soma=0;
        float M;
        unsigned long inicio = millis();
+       int N=0;
 
         for( N=0 ; millis()-inicio < periodo; N++){
              M=analogRead(pino)-zero;
