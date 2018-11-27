@@ -55,7 +55,7 @@ float sensorCorrente::calculaDigitalIpp(){
 
 float sensorCorrente::calculaRMS(){
 
-       float periodo= (float) 1/60;
+       float periodo= (float) 1000/60;
        float soma=0;
        float M;
        unsigned long inicio = millis();
