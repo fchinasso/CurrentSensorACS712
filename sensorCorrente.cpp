@@ -34,7 +34,7 @@ void sensorCorrente::calibrar(){
 }
 float sensorCorrente::calculaDigitalIpp(){
 
-      float periodo = (float) 1/60;
+      float periodo = (float) 1000/60;
       int x;
       int maior=zero;
       int menor=zero;
