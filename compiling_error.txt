@@ -1,0 +1,4 @@
+C:\Users\usuario\Documents\GitHub\CurrentSensorACS712\sensorCorrente.cpp:1:21: fatal error: Arduino.h: No such file or directory
+ #include "Arduino.h"
+                     ^
+compilation terminated.

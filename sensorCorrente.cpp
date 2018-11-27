@@ -23,16 +23,17 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
     }
 }
 void sensorCorrente::calibrar(){
-    int n =0;
+    int n = 0;
 
     for(int i =0;i<10;i++){
 
-      n+= analogRead(pino);
+      n += analogRead(pino);
     }
      zero = n/10;
 
 }
 float sensorCorrente::calculaDigitalIpp(){
+
       float periodo = (float) 1/60;
       int x;
       int maior=zero;
@@ -53,12 +54,12 @@ float sensorCorrente::calculaDigitalIpp(){
 }
 
 float sensorCorrente::calculaRMS(){
+
        float periodo= (float) 1/60;
        float soma=0;
        float M;
-       int N;
-       double int k;
        unsigned long inicio = millis();
+       int N=0;
 
         for( N=0 ; millis()-inicio < periodo; N++){
              M=analogRead(pino)-zero;
