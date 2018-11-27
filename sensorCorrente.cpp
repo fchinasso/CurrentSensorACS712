@@ -22,7 +22,7 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //Cons
 
     }
 }
-void sensorCorrente::calibrar(){ //calibrates ADC reference
+void sensorCorrente::calibrar(){
     int n = 0;
 
     for(int i =0;i<10;i++){
@@ -32,7 +32,7 @@ void sensorCorrente::calibrar(){ //calibrates ADC reference
      zero = n/10;
 
 }
-float sensorCorrente::calculaDigitalIpp(){ //calculates lowest and highest value for Ipp
+float sensorCorrente::calculaDigitalIpp(){
 
       float periodo = (float) 1000/60; //60Hz
       int x;
@@ -53,7 +53,7 @@ float sensorCorrente::calculaDigitalIpp(){ //calculates lowest and highest value
          return (maior-menor);
 }
 
-float sensorCorrente::calculaRMS(){ //takes samples for RMS calculating of AC signal
+float sensorCorrente::calculaRMS(){
 
        float periodo= (float) 1000/60;
        float soma=0;
@@ -61,7 +61,8 @@ float sensorCorrente::calculaRMS(){ //takes samples for RMS calculating of AC si
        unsigned long inicio = millis();
        int N=0;
 
-        for( N=0 ; millis()-inicio < periodo; N++){
+        for( N=0 ; millis()-inicio < periodo; N++){ //need to test how many periods works best
+          x=analogRead(pino)-zero;
              M=analogRead(pino)-zero;
              soma += M*M;
         }
@@ -69,8 +70,7 @@ float sensorCorrente::calculaRMS(){ //takes samples for RMS calculating of AC si
 
 
 }
-float sensorCorrente::calculaCorrente(int A){ //receives a value and converts it according to the sensor conversion value
-
+float sensorCorrente::calculaCorrente(int A){
 
        A = (A*(5/1024))/fatorConversao;
 
