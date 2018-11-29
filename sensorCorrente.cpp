@@ -17,10 +17,13 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
       break;
 
       case T30A:
-      fatorConversao = 0.066;
+      fatorConversao = 0.166;
       break;
 
     }
+}
+void sensorCorrente::setfatorConversao(float sens) {
+	fatorConversao = sens;
 }
 void sensorCorrente::calibrar(){
     int n = 0;
@@ -71,8 +74,5 @@ float sensorCorrente::calculaRMS(){
 }
 float sensorCorrente::calculaCorrente(int A){
 
-
-       A = (A*(5/1024))/fatorConversao;
-
-       return A;
+	return (((float) (5*A))/1024)/fatorConversao;
 }

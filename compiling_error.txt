@@ -1,4 +1,2 @@
-C:\Users\usuario\Documents\GitHub\CurrentSensorACS712\sensorCorrente.cpp:1:21: fatal error: Arduino.h: No such file or directory
- #include "Arduino.h"
-                     ^
-compilation terminated.
+C:\Users\usuario\Documents\GitHub\CurrentSensorACS712\teste.ino: file not recognized: File format not recognized
+collect2.exe: error: ld returned 1 exit status
