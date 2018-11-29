@@ -2,7 +2,7 @@
 #include <sensorCorrente.h>
 
 
-sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //Construction method
+sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METODO CONSTRUTOR
 
     pino=_pino;
 
@@ -17,11 +17,12 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //Cons
       break;
 
       case T30A:
-      fatorConversao = 0.066;
+      fatorConversao = 0.166;
       break;
 
     }
 }
+
 void sensorCorrente::calibrar(){
     int n = 0;
 
@@ -34,13 +35,13 @@ void sensorCorrente::calibrar(){
 }
 float sensorCorrente::calculaDigitalIpp(){
 
-      float periodo = (float) 1000/60; //60Hz
+      float periodo = (float) 1/60;
       int x;
       int maior=zero;
       int menor=zero;
       unsigned long inicio = millis();
 
-      while(millis()-inicio < 10 * periodo){ //need to test how many periods works best
+      while(millis()-inicio < 10 * periodo){
         x=analogRead(pino)-zero;
 
           if(x<menor)
@@ -55,24 +56,22 @@ float sensorCorrente::calculaDigitalIpp(){
 
 float sensorCorrente::calculaRMS(){
 
-       float periodo= (float) 1000/60;
+       float periodo= (float) 1000000/60;
        float soma=0;
        float M;
-       unsigned long inicio = millis();
+       unsigned long inicio = micros();
        int N=0;
 
-        for( N=0 ; millis()-inicio < periodo; N++){ //need to test how many periods works best
-          x=analogRead(pino)-zero;
-             M=analogRead(pino)-zero;
-             soma += M*M;
+        for( N=0 ; micros()-inicio < 10*periodo; N++){
+
+		M=analogRead(pino)-zero;
+                soma += M*M;
         }
-        return sqrt(soma/N);
+        return (sqrt(soma/N)/1024*5)/fatorConversao;
 
 
 }
 float sensorCorrente::calculaCorrente(int A){
 
-       A = (A*(5/1024))/fatorConversao;
-
-       return A;
+	return (((float) (5*A))/1024)/fatorConversao;
 }
