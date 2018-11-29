@@ -1,3 +1,4 @@
+
 #ifndef sensorCorrente_h
 #define sensorCorrente_h
 
@@ -11,9 +12,9 @@ class sensorCorrente{
     public:
         sensorCorrente(int _pino,sensorCorrente_type modelo);
         float calculaRMS();
-        float calculaCorrente(float A);
+        float calculaCorrente(int A);
         void calibrar();
-	      float calculaDigitalIpp();
+	   float calculaDigitalIpp();
 
 
 

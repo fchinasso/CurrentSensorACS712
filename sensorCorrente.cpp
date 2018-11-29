@@ -22,9 +22,7 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
 
     }
 }
-void sensorCorrente::setfatorConversao(float sens) {
-	fatorConversao = sens;
-}
+
 void sensorCorrente::calibrar(){
     int n = 0;
 
@@ -58,17 +56,18 @@ float sensorCorrente::calculaDigitalIpp(){
 
 float sensorCorrente::calculaRMS(){
 
-       float periodo= (float) 1/60;
+       float periodo= (float) 1000000/60;
        float soma=0;
        float M;
-       unsigned long inicio = millis();
+       unsigned long inicio = micros();
        int N=0;
 
-        for( N=0 ; millis()-inicio < periodo; N++){
-             M=analogRead(pino)-zero;
-             soma += M*M;
+        for( N=0 ; micros()-inicio < 10*periodo; N++){
+
+		M=analogRead(pino)-zero;
+                soma += M*M;
         }
-        return sqrt(soma/N);
+        return (sqrt(soma/N)/1024*5)/fatorConversao;
 
 
 }
