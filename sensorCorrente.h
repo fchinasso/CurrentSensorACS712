@@ -14,7 +14,7 @@ class sensorCorrente{
         float calculaRMS();
         float calculaCorrente(int A);
         void calibrar();
-	   float calculaDigitalIpp();
+	      float calculaDigitalIpp();
 
 
 

@@ -64,7 +64,7 @@ float sensorCorrente::calculaRMS(){
 
         for( N=0 ; micros()-inicio < 10*periodo; N++){
 
-		M=analogRead(pino)-zero;
+	             	M=analogRead(pino)-zero;
                 soma += M*M;
         }
         return (sqrt(soma/N)/1024*5)/fatorConversao;
