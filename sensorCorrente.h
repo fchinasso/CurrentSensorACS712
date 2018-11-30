@@ -12,8 +12,8 @@ class sensorCorrente{
     public:
         sensorCorrente(int _pino,sensorCorrente_type modelo);
         float calculaRMS();
-        float calculaCorrente(int A);
-        void calibrar();
+        float calculaCorrenteDC();
+        void  calibrar();
 	      float calculaDigitalIpp();
 
 

@@ -17,7 +17,7 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
       break;
 
       case T30A:
-      fatorConversao = 0.166;
+      fatorConversao = 0.066;
       break;
 
     }
@@ -64,14 +64,21 @@ float sensorCorrente::calculaRMS(){
 
         for( N=0 ; micros()-inicio < 10*periodo; N++){
 
-	             	M=analogRead(pino)-zero;
-                soma += M*M;
+           M=analogRead(pino)-zero;
+           soma += M*M;
         }
         return (sqrt(soma/N)/1024*5)/fatorConversao;
 
 
 }
-float sensorCorrente::calculaCorrente(int A){
+float sensorCorrente::calculaCorrenteDC(){
+
+ int A=0;
+
+    for(int n=0;n<10;n++){
+        A += analogRead(pino)-zero;
+    }
+    A =A/10;
 
 	return (((float) (5*A))/1024)/fatorConversao;
 }
