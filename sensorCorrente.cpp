@@ -30,7 +30,12 @@ void sensorCorrente::calibrar(){
 
       n += analogRead(pino);
     }
-     zero = n/10;
+     zero = (int) n/10;
+
+}
+int sensorCorrente::getzero(){
+
+    return(zero);
 
 }
 float sensorCorrente::calculaDigitalIpp(){

@@ -7,13 +7,15 @@ void setup() {
 Serial.begin(9600);
 s01.calibrar();
 Serial.println("Calibrado!");
+Serial.println(String("Valor de calibracao:") + s01.getzero());
+
+
 
 }
 
 void loop() {
 
     float I;
-
 
     I = s01.calculaCorrenteDC();
     Serial.println(I);
