@@ -1,4 +1,4 @@
-#include "Arduino.h"
+//#include "Arduino.h"
 #include <sensorCorrente.h>
 
 
@@ -73,12 +73,12 @@ float sensorCorrente::calculaRMS(){
 }
 float sensorCorrente::calculaCorrenteDC(){
 
- int A=0;
+ float A=0;
 
-    for(int n=0;n<10;n++){
+    for(int n=0; n<10; n++){
         A += analogRead(pino)-zero;
     }
-    A =A/10;
+    A = A/10;
 
 	return (((float) (5*A))/1024)/fatorConversao;
 }

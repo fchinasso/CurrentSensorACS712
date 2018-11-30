@@ -20,7 +20,7 @@ class sensorCorrente{
 
     private:
         int pino;
-        int fatorConversao;
+        float fatorConversao;
         int zero = 512;
 
 
