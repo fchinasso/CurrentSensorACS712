@@ -83,6 +83,7 @@ float sensorCorrente::calculaCorrenteDC(){
     for(int n=0; n<10; n++){
         A += analogRead(pino)-zero;
     }
+
     A = A/10;
 
 	return (((float) (5*A))/1024)/fatorConversao;
