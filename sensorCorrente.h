@@ -16,6 +16,8 @@ class sensorCorrente{
         void  calibrar();
 	      float calculaDigitalIpp();
         int  getzero();
+        long getTrueVcc();
+
 
 
 
@@ -23,6 +25,7 @@ class sensorCorrente{
         int pino;
         float fatorConversao;
         int zero = 512;
+        long trueVCC=5;
 
 
 };
