@@ -25,7 +25,7 @@ class sensorCorrente{
         int pino;
         float fatorConversao;
         int zero = 512;
-        long trueVCC=5;
+        float trueVCC=5;
 
 
 };

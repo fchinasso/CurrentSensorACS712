@@ -43,7 +43,7 @@ void sensorCorrente::calibrar(){
   result = ADCL;
   result |= ADCH<<8;
   result = 1125300L / result; // Back-calculate AVcc in mV
-  trueVCC = result;
+  trueVCC = result/1000;
 
 
 }
