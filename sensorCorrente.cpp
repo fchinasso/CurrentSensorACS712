@@ -105,7 +105,7 @@ float sensorCorrente::calculaRMS(){
            M=analogRead(pino)-zero;
            soma += M*M;
         }
-        return (sqrt(soma/N)/1024*5)/fatorConversao;
+        return (sqrt(soma/N)/1024*trueVCC)/fatorConversao;
 
 
 }
@@ -119,5 +119,5 @@ float sensorCorrente::calculaCorrenteDC(){
 
     A = A/10;
 
-	return (((float) (5*A))/1024)/fatorConversao;
+	return (((float) (trueVCC*A))/1024)/fatorConversao;
 }
