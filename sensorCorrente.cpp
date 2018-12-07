@@ -53,8 +53,8 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
       case SCT013A60
       fatorConversao = 0.016;
       break;
-
 }
+
 }
 
 void sensorCorrente::calibrar(){
@@ -116,6 +116,19 @@ float sensorCorrente::calculaDigitalIpp(){
 
          return (maior);
 }
+float mediaTempo(int time){
+  unsigned long inicio = millis();
+  unsigned int soma=0;
+  int i=0;
+
+  while(millis()-inicio < time){
+    soma=sensorCorrente.calculaRMS();
+    i++;
+  }
+return soma/i;
+
+}
+
 
 float sensorCorrente::calculaRMS(){
 

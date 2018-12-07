@@ -16,6 +16,7 @@ class sensorCorrente{
         void  calibrar();
         int  getzero();
         float getTrueVcc();
+        float mediaTempo();
 
 
 
