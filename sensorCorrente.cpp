@@ -20,17 +20,53 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
       fatorConversao = 0.066;
       break;
 
-    }
+      case SCT013A5
+      fatorConversao = 0.2;
+      break;
+
+      case SCT013A10
+      fatorConversao = 0.1;
+      break;
+
+      case SCT013A15
+      fatorConversao = 0.066;
+      break;
+
+
+      case SCT013A20:
+      fatorConversao = 0.05;
+      break;
+
+
+      case SCT13A25
+      fatorConversao = 0.04;
+      break;
+
+      case SCT013A30
+      fatorConversao = 0.033;
+      break;
+
+      case SCT013A50
+      fatorConversao = 0.02;
+      break;
+
+      case SCT013A60
+      fatorConversao = 0.016;
+      break;
+
+}
 }
 
 void sensorCorrente::calibrar(){
-    int n = 0;
+    float n = 0;
 
     for(int i =0;i<10;i++){
 
-      n += analogRead(pino);
+      n =  n + analogRead(pino);
+
     }
-     zero = (int) n/10;
+
+     zero = n/10;
 
 
 
@@ -62,14 +98,14 @@ float sensorCorrente::getTrueVcc(){
 
 float sensorCorrente::calculaDigitalIpp(){
 
-      float periodo = (float) 1/60;
+      float periodo = (float) 1000/60;
       int x;
-      int maior=zero;
-      int menor=zero;
+      int maior=0;
+      int menor=0;
       unsigned long inicio = millis();
 
-      while(millis()-inicio < 10 * periodo){
-        x=analogRead(pino)-zero;
+      while(millis()-inicio < periodo){
+        x=analogRead(pino);
 
           if(x<menor)
             menor=x;
@@ -78,24 +114,26 @@ float sensorCorrente::calculaDigitalIpp(){
             maior=x;
          }
 
-         return (maior-menor);
+         return (maior);
 }
 
 float sensorCorrente::calculaRMS(){
 
-       float periodo= (float) 1000000/60;
+       float periodo= (float) 1000/60;
        float soma=0;
        float M;
-       unsigned long inicio = micros();
+       uint32_t inicio = millis();
        int N=0;
 
-        for( N=0 ; micros()-inicio < 10*periodo; N++){
+        while (millis()-inicio < 2 * periodo){
 
            M=analogRead(pino)-zero;
+           N++;
            soma += M*M;
-        }
-        return (sqrt(soma/N)/1024*trueVCC)/fatorConversao;
+           }
 
+
+       return (sqrt(soma/N)/1024*trueVCC)/fatorConversao;
 
 }
 float sensorCorrente::calculaCorrenteDC(){
