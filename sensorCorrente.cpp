@@ -2,11 +2,13 @@
 #include <sensorCorrente.h>
 
 
-sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METODO CONSTRUTOR
+sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo,char _tipomedicao){ //construction method for the different types of sensors
 
     pino=_pino;
+    tipomedicao =_tipomedicao;
 
     switch(modelo){
+
 
       case T5B:
       fatorConversao = 0.185;
@@ -20,15 +22,15 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
       fatorConversao = 0.066;
       break;
 
-      case SCT013A5
+      case SCT013A5:
       fatorConversao = 0.2;
       break;
 
-      case SCT013A10
+      case SCT013A10:
       fatorConversao = 0.1;
       break;
 
-      case SCT013A15
+      case SCT013A15:
       fatorConversao = 0.066;
       break;
 
@@ -38,29 +40,29 @@ sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo){     //METO
       break;
 
 
-      case SCT13A25
+      case SCT13A25:
       fatorConversao = 0.04;
       break;
 
-      case SCT013A30
+      case SCT013A30:
       fatorConversao = 0.033;
       break;
 
-      case SCT013A50
+      case SCT013A50:
       fatorConversao = 0.02;
       break;
 
-      case SCT013A60
+      case SCT013A60:
       fatorConversao = 0.016;
       break;
 }
 
 }
 
-void sensorCorrente::calibrar(){
+void sensorCorrente::calibrar(){  //calibrates the sensor (no current must flow throught it)
     float n = 0;
 
-    for(int i =0;i<10;i++){
+    for(int i =0;i<10;i++){  //calibrates de offset 2,5 V
 
       n =  n + analogRead(pino);
 
@@ -69,16 +71,16 @@ void sensorCorrente::calibrar(){
      zero = n/10;
 
 
-
+                                          //calibrates VCC
      long result;
-// Read 1.1V reference against AVcc
+
   ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-  delay(2); // Wait for Vref to settle
-  ADCSRA |= _BV(ADSC); // Convert
+  delay(2);
+  ADCSRA |= _BV(ADSC);
   while (bit_is_set(ADCSRA,ADSC));
   result = ADCL;
   result |= ADCH<<8;
-  result = 1125300L / result; // Back-calculate AVcc in mV
+  result = 1125300L / result;
   trueVCC = (float) result/1000;
 
 
@@ -96,41 +98,9 @@ float sensorCorrente::getTrueVcc(){
       return (trueVCC);
 }
 
-float sensorCorrente::calculaDigitalIpp(){
-
-      float periodo = (float) 1000/60;
-      int x;
-      int maior=0;
-      int menor=0;
-      unsigned long inicio = millis();
-
-      while(millis()-inicio < periodo){
-        x=analogRead(pino);
-
-          if(x<menor)
-            menor=x;
-
-          if(x>maior)
-            maior=x;
-         }
-
-         return (maior);
-}
-float mediaTempo(int time){
-  unsigned long inicio = millis();
-  unsigned int soma=0;
-  int i=0;
-
-  while(millis()-inicio < time){
-    soma=sensorCorrente.calculaRMS();
-    i++;
-  }
-return soma/i;
-
-}
 
 
-float sensorCorrente::calculaRMS(){
+float sensorCorrente::calculaRMS(){ //Calculates RMS value
 
        float periodo= (float) 1000/60;
        float soma=0;
@@ -138,7 +108,7 @@ float sensorCorrente::calculaRMS(){
        uint32_t inicio = millis();
        int N=0;
 
-        while (millis()-inicio < 2 * periodo){
+        while (millis()-inicio < periodo){
 
            M=analogRead(pino)-zero;
            N++;
@@ -149,15 +119,63 @@ float sensorCorrente::calculaRMS(){
        return (sqrt(soma/N)/1024*trueVCC)/fatorConversao;
 
 }
-float sensorCorrente::calculaCorrenteDC(){
+float sensorCorrente::calculaCorrenteDC(){ //calculates DC value
 
- float A=0;
+    float A=0;
 
-    for(int n=0; n<10; n++){
+    for(int n=0; n<5; n++){
         A += analogRead(pino)-zero;
     }
 
-    A = A/10;
+    A = A/5;
 
 	return (((float) (trueVCC*A))/1024)/fatorConversao;
+}
+
+float sensorCorrente::medir(){//simples function for measuring a sensor value
+
+    float I;
+
+     if(tipomedicao == 'A')
+      I = calculaRMS();
+
+     if(tipomedicao == 'D')
+      I = calculaCorrenteDC();
+
+    return I;
+
+}
+void sensorCorrente::printCalibrar(){
+
+
+  Serial.println("Calibrado!");
+  Serial.println(String("Valor de calibracao:") + getzero());
+  Serial.println(String("Valor de Vcc:") + getTrueVcc());
+  Serial.println();
+
+}
+
+float sensorCorrente::mediaTempo(float time,int intervalo){ // receives excursion time for means calculation
+
+
+    float soma=0;
+    int N=0;
+    uint32_t inicio = millis();
+
+    time = time * 60 * 1000;
+    intervalo = intervalo *1000;
+
+
+    while(millis()-inicio < time){
+
+        soma = soma + medir();
+
+
+        N++;
+
+        delay(intervalo);
+    }
+    return (float)(soma/N);
+
+
 }
