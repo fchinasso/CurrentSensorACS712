@@ -1,4 +1,0 @@
-C:\Users\usuario\Documents\GitHub\CurrentSensorACS712\sensorCorrente.cpp:2:28: fatal error: sensorCorrente.h: No such file or directory
- #include <sensorCorrente.h>
-                            ^
-compilation terminated.
