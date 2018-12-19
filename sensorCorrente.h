@@ -9,25 +9,33 @@ enum sensorCorrente_type {T5B,T20A,T30A, SCT013A5, SCT013A10,SCT013A15,SCT013A20
 class sensorCorrente{
 
     public:
-        sensorCorrente(int _pino,sensorCorrente_type modelo,char tipomedicao);
-        float calculaRMS();
-        float calculaCorrenteDC();
-        void  calibrar();
+        sensorCorrente(int _pino,sensorCorrente_type modelo,char tipomedicao,char fase);
+
         int  getzero();
         float getTrueVcc();
-        float mediaTempo(float time,int intervalo);
+        char getFase();
+
+        float calculaRMS();
+        float calculaCorrenteDC();
         float medir();
+
+        void  calibrar();
+
         void printCalibrar();
+        void printCorrente(float valor);
+
 
 
 
 
     private:
+
         int pino;
         float fatorConversao;
         int zero = 512;
         float trueVCC=5;
-        char tipomedicao = 'A';
+        char tipomedicao;
+        char fase;
 
 
 };

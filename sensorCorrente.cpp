@@ -2,10 +2,12 @@
 #include <sensorCorrente.h>
 
 
-sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo,char _tipomedicao){ //construction method for the different types of sensors
+sensorCorrente::sensorCorrente(int _pino,sensorCorrente_type modelo,char _tipomedicao,char _fase){ //construction method for the different types of sensors
 
-    pino=_pino;
+    pino =_pino;
     tipomedicao =_tipomedicao;
+    fase =_fase;
+
 
     switch(modelo){
 
@@ -98,6 +100,11 @@ float sensorCorrente::getTrueVcc(){
       return (trueVCC);
 }
 
+char sensorCorrente::getFase(){
+
+    return(fase);
+}
+
 
 
 float sensorCorrente::calculaRMS(){ //Calculates RMS value
@@ -154,28 +161,10 @@ void sensorCorrente::printCalibrar(){
   Serial.println();
 
 }
-
-float sensorCorrente::mediaTempo(float time,int intervalo){ // receives excursion time for means calculation
-
-
-    float soma=0;
-    int N=0;
-    uint32_t inicio = millis();
-
-    time = time * 60 * 1000;
-    intervalo = intervalo *1000;
+void sensorCorrente::printCorrente(float valor){
 
 
-    while(millis()-inicio < time){
-
-        soma = soma + medir();
-
-
-        N++;
-
-        delay(intervalo);
-    }
-    return (float)(soma/N);
+  Serial.println(String("Fase ") + getFase() + String(": ") + valor + String(" A"));
 
 
 }
