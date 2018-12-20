@@ -155,7 +155,7 @@ float sensorCorrente::medir(){//simples function for measuring a sensor value
 void sensorCorrente::printCalibrar(){
 
 
-  Serial.println("Calibrado!");
+  Serial.println( (String("Sensor da fase ") + getFase() +String(" Calibrado!"));
   Serial.println(String("Valor de calibracao:") + getzero());
   Serial.println(String("Valor de Vcc:") + getTrueVcc());
   Serial.println();
