@@ -8,11 +8,9 @@ sensorCorrente s03(A5,T30A,'D','3');
 int intervalo = 2;
 float tempo = 0.5;
 
-int N=0;
 
-float I1=0;
-float I2=0;
-float I3=0;
+
+
 
 
 
@@ -39,6 +37,11 @@ void loop() {
 uint32_t inicio = millis();
 uint32_t timer = millis();
 
+int N=0;
+
+float I1=0;
+float I2=0;
+float I3=0;
 
 
     while( millis() - inicio < tempo){
@@ -58,7 +61,7 @@ uint32_t timer = millis();
       I1 = I1/N;
       I2 = I2/N;
       I3 = I3/N;
- 
+
     s01.printCorrente(I1);
     s02.printCorrente(I2);
     s03.printCorrente(I3);
