@@ -155,7 +155,7 @@ float sensorCorrente::medir(){//simples function for measuring a sensor value
 void sensorCorrente::printCalibrar(){
 
 
-  Serial.println( (String("Sensor da fase ") + getFase() +String(" Calibrado!"));
+  Serial.println( (String("Sensor de CORRENTE da fase ") + getFase() +String(" Calibrado!"));
   Serial.println(String("Valor de calibracao:") + getzero());
   Serial.println(String("Valor de Vcc:") + getTrueVcc());
   Serial.println();
@@ -167,4 +167,34 @@ void sensorCorrente::printCorrente(float valor){
   Serial.println(String("Fase ") + getFase() + String(": ") + valor + String(" A"));
 
 
+}
+void enviar(int valor) {
+
+  int count = 0;
+  int flag = 0;
+
+  char abc[60];
+  dtostrf(valor, 51, 3, abc);
+
+
+  char * str = (char *) malloc(1 + strlen(s6) + strlen(abc) );
+  strcpy(str, s6);
+  strcat(str, abc);
+
+    Serial.println(str);
+
+
+  while (flag == 0) {
+
+    if (flag == 0) {
+      flag = RotinaGSM(str);
+      count++;
+    }
+    if (count > 5)
+      return 0;
+
+    if (flag == 1)
+      return 1;
+
+  }
 }
