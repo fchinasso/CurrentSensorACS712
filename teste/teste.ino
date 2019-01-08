@@ -7,7 +7,7 @@ sensorCorrente s02(A4,T30A,'D','2');
 sensorCorrente s03(A5,T30A,'D','3');
 
 int intervalo = 2; //intervalo entre  cada medição
-float tempo = 0.5; //tempo para calculo da média
+float tempo = 0.1; //tempo para calculo da média
 
 SoftwareSerial mySerial(10, 11); // Declaramos os pinos RX(10) e TX(11) que vamos a usar na comunicacao Serial
 
@@ -16,20 +16,15 @@ char s1[] = "AT";
 char s2[] = "AT+CSQ";
 char s3[] = "AT+CSTT=\"smart.m2m.vivo.com.br\",\"vivo\",\"vivo\"";
 char s4[] = "AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80";
-char s5[] = "AT+CIPSEND=51";
-char s6[] = "GET /update?api_key=XQQW4J3J2GSA5JC9&field1=";
+char s5[] = "AT+CIPSEND=90";
+char s6[] = "GET /update?api_key=JLLRIEA9Y8VCK0II&field1=";
+
 char s7[] = "AT+CIPCLOSE";
 char s8[] = "AT+CIPSHUT";
-
-char f1[]="GET /update?api_key=9BF0UF9VSI6DBGTM&field1=";
-char f2[]="GET /update?api_key=X6VPZMEXUJ6MPTIM&field1=";
-char f3[]="GET /update?api_key=BLI9ZT355Q5YD9VH&field1=";
 
 char r1[] = "OK";
 char r2[] = "CONNECT";
 char r3[] = "CLOSE";
-
-
 
 
 
@@ -87,51 +82,24 @@ float I3=0;
       I3 = I3/N;
 
 
-    flag = enviar(I1,'1');
-          if(flag == false)
-            Serial.println("ATENCAO, Valor Fase 1 nao enviada");
-
-
-    flag = enviar(I2,'2');
-          if(flag == false)
-            Serial.println("ATENCAO, Valor Fase 2 nao enviada");
-
-
-    flag = enviar(I3,'3');
-          if(flag == false)
-            Serial.println("ATENCAO, Valor Fase 3 nao enviada");
-
-
+    flag = enviar(I1,I2,I3);
 }
-bool enviar(float valor,char fase) {
+bool enviar(float fase1,float fase2,float fase3) {
 
   int count = 0;
   bool flag = false;
 
-  char abc[60];
-  dtostrf(valor, 4, 2, abc); //converte o float em char
+  char f1[15];
+  char f2[15];
+  char f3[15];
+
+  dtostrf(fase1, 7, 2,f1); //converte o float em char
+  dtostrf(fase2, 7, 2,f2);
+  dtostrf(fase2, 7, 2,f3);
 
 
-  char * str = (char *) malloc(1 + strlen(s6) + strlen(abc) ); //cria string para ser enviada via rotinaGSM
-
-  switch(fase){
-
-    case '1':
-    strcpy(str, f1);
-    break;
-
-    case '2':
-    strcpy(str, f2);
-    break;
-
-    case '3':
-    strcpy(str, f3);
-    break;
-
-  }
-
-  strcat(str, abc);
-
+  char * str = (char *) malloc(1 + strlen(s6) + 3*strlen(f1)+2 * strlen("&field2="));
+  snprintf(str,100,"%s%s%s%s%s%s",s6,f1,"&field2=",f2,"&field3=",f3);
 
 
 
@@ -166,7 +134,11 @@ int RotinaGSM(char valor[]) {
   while (sendATcommand(s8, r1, 200) == 0)  // CIPSHUT
   {
     sendATcommand(s8, r1, 200);
+     cont++;
+    if (cont > 4)
+      return false ;
   }
+  cont=0;
   delay(500);
 
   while (sendATcommand(s3, r1, 200) == 0) //AT+CSTT=\"smart.m2m.vivo.com.br\",\"vivo\",\"vivo\"
@@ -181,9 +153,9 @@ int RotinaGSM(char valor[]) {
   }
   delay(500);
 
-  while (sendATcommand(s4, r2, 5000) == 0) // AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80
+  while (sendATcommand(s4, r2, 2000) == 0) // AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80
   {
-    sendATcommand(s4, r2, 5000);
+    sendATcommand(s4, r2, 2000);
     cont++;
     if (cont > 4)
       return false ;
