@@ -1,10 +1,109 @@
-Sending: ATE0
-Received:
+AT
+
+OK
+AT+CIPSHUT
+
+SHUT OK
+
+AT+CSTT="smart.m2m.vivo.com.br","vivo","vivo"
+
+OK
+AT+CIPSHUT
+
+SHUT OK
+AT+CIPSTART="TCP","api.thingsp
+
+
+
+SHUT OK
+AT
+
+AT+CSTT="smart.m2m.vivo.com.br","vivo","vivo"
+
+OK
+AT+CIPSHUT
+
+SHUT OK
+AT+CIPSTART="TCP","api.thingspeak.com",80
+
+OK
+AT+CIPSEND=90
+
+ERROR
+
+
+CONNECT OK
+GET /update?api_key=JLLRIEA9Y8VCK0II&field1=  37.14&field2=  37.13&field3=  37.13
+
+ERROR
+
+AT
+
+OK
+AT+CIPSHUT
+
+
+
+
 OK
 
 
-AT
-0AT
-0AT
 
-0
+
+
+
+
+
+
+
+
+SHUT OK
+***********ATENCAO********
+******Falha no envio******
+AT
+
+OK
+AT+CIPSHUT
+
+SHUT OK
+AT+CSTT="smart.m2m.vivo.com.br","vivo","vivo"
+
+OK
+
+
+
+
+
+
+
+
+
+AT+CIPSHUT
+
+SHUT OK
+AT+CIPSHUT
+
+SHUT OK
+AT+CIPSTART="TCP","api.thingspeak.com",80
+
+
+OK
+AT+CIPSEND=90
+
+ERROR
+
+
+AT+CIPSHUT
+
+SHUT OK
+
+
+ERROR
+
+CONNECT OK
+
+GET /update?api_key=JLLRIEA9Y8VCK0II&field1=  37.14&field2=  37.13&field3=  37.13
+
+
+OK
+AT+CIPSHUT
