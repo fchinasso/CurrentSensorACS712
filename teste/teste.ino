@@ -13,6 +13,8 @@ float tempo = 0.1; //tempo para calculo da mÃ©dia
 
 SoftwareSerial mySerial(10, 11); // Declaramos os pinos RX(10) e TX(11) que vamos a usar na comunicacao Serial
 
+//declara comandos AT a serem utilizados
+
 char s0[] = "ATE0";
 char s1[] = "AT";
 char s2[] = "AT+CSQ";
@@ -71,7 +73,7 @@ void setup() {
 
   pinMode(9, OUTPUT);//Pino de reset
   digitalWrite(9, HIGH);
-  resetGSM();
+  resetGSM(); //reset modulo gsm para evitar bugs
 
 
 }
@@ -89,7 +91,7 @@ void loop() {
   float I2 = 0;
   float I3 = 0;
 
-
+// rotina que envia valores de corrente baseada no intervalo entre cada medição e na media do tempo estabelecido
   for (;;) {
 
     if (millis() - timer >= intervalo ) {
@@ -109,7 +111,7 @@ void loop() {
 
 
 
-      RotinagGSM4jSON(I1, I2, I3);
+      RotinagGSM4jSON(I1, I2, I3); //envia dados
       /*  flag = enviar(I1, I2, I3);
         if (flag == true)
         Serial.println(String("ENVIADO!"));
@@ -188,7 +190,7 @@ void RotinagGSM4jSON(float I1, float I2, float I3) {
   value_combinedActivePower["valleyCharge"] = 0;
   value["lineFrequency"] = 60;
 
-
+//atualiza valores de corrente
   value_current["a"] = I1;
   value_current["b"] = I2;
   value_current["c"] = I3;
@@ -301,6 +303,8 @@ void RotinagGSM4jSON(float I1, float I2, float I3) {
 
 }
 
+//rotina para thingspeak
+
 int RotinaGSM(char valor[]) {
 
   int cont = 0;
@@ -367,6 +371,8 @@ int RotinaGSM(char valor[]) {
 
 
 }
+
+//envia os commandos AT para o modulo
 int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeout, int flag) {
   int i;
   uint8_t x = 0,  answer = 0;
