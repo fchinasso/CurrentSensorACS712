@@ -8,8 +8,8 @@ sensorCorrente s03(A5, T30A, 'D', '3');
 
 
 long timestamp;
-int intervalo = 2; //interval between each measure
-float tempo = 0.3; //interval between each send
+int intervalo = 2; //interval between each measure (seconds)
+float tempo = 0.3; //interval between each send (minutes)
 
 SoftwareSerial mySerial(10, 11); // Serial comunication pins
 
