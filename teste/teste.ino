@@ -2,19 +2,18 @@
 #include <sensorCorrente.h>
 #include <SoftwareSerial.h>
 
-sensorCorrente s01(A3, T30A, 'D', '1'); //declarcao de objetos para cada fase
+sensorCorrente s01(A3, T30A, 'D', '1'); //objetcs for each phase to be measured
 sensorCorrente s02(A4, T30A, 'D', '2');
 sensorCorrente s03(A5, T30A, 'D', '3');
 
 
 long timestamp;
-int intervalo = 2; //intervalo entre  cada mediÃ§Ã£o
-float tempo = 0.1; //tempo para calculo da mÃ©dia
+int intervalo = 2; //interval between each measure
+float tempo = 0.3; //interval between each send
 
-SoftwareSerial mySerial(10, 11); // Declaramos os pinos RX(10) e TX(11) que vamos a usar na comunicacao Serial
+SoftwareSerial mySerial(10, 11); // Serial comunication pins
 
-//declara comandos AT a serem utilizados
-
+//Lib of Strings for AT Commands
 char s0[] = "ATE0";
 char s1[] = "AT";
 char s2[] = "AT+CSQ";
@@ -38,7 +37,7 @@ char h1[] = "AT+HTTPINIT";
 char h2[] = "AT+HTTPPARA=\"CID\",1";
 char h3[] = "AT+HTTPPARA=\"URL\",\"devsumersoft.dyndns.org:8580/endpoint/v1/metering\"";
 char h4[] = "AT+HTTPPARA=\"CONTENT\",\"application/json\"";
-char h5[] = "AT+HTTPDATA=400,5000";
+char h5[] = "AT+HTTPDATA=";
 char h6[] = "AT+HTTPACTION=1";
 char h7[] = "AT+HTTPREAD";
 char h8[] = "AT+HTTPTERM";
@@ -50,15 +49,12 @@ char r3[] = "CLOSE";
 char r4[] = "DOWNLOAD";
 
 
-
-
-
 void setup() {
 
 
   Serial.begin(9600);
-  mySerial.begin(9600);     // Iniciando comunicaÃ§Ã£o serial
-  delay(1000);
+  mySerial.begin(9600);     // Starts Serial Communication
+
 
   /*s01.calibrar();
     s02.calibrar();
@@ -71,10 +67,21 @@ void setup() {
   intervalo = intervalo * 1000;
   tempo = tempo * 1000 * 60;
 
-  pinMode(9, OUTPUT);//Pino de reset
+  pinMode(9, OUTPUT);//GSM module Reset pin
   digitalWrite(9, HIGH);
-  resetGSM(); //reset modulo gsm para evitar bugs
+  resetGSM();
+  delay(5000);
 
+ //connects to GSM Network
+  int check = gsmConnectRoutine();
+
+
+  while (check == 0) {
+    delay(3000);
+    resetGSM();
+    delay(3000);
+    check = gsmConnectRoutine();
+  }
 
 }
 
@@ -91,7 +98,7 @@ void loop() {
   float I2 = 0;
   float I3 = 0;
 
-// rotina que envia valores de corrente baseada no intervalo entre cada medição e na media do tempo estabelecido
+//main loop, measures and then send the values
   for (;;) {
 
     if (millis() - timer >= intervalo ) {
@@ -108,20 +115,8 @@ void loop() {
       I2 = I2 / N;
       I3 = I3 / N;
 
-
-
-
-      RotinagGSM4jSON(I1, I2, I3); //envia dados
-      /*  flag = enviar(I1, I2, I3);
-        if (flag == true)
-        Serial.println(String("ENVIADO!"));
-        else {
-        Serial.println(String("***********ATENCAO********"));
-        Serial.println(String("******Falha no envio******"));
-        }*/
-
-
-
+ //after the elapsed time the measures are sent
+      HTTPpostRoutine(I1, I2, I3);
 
       I1 = 0;
       I2 = 0;
@@ -137,18 +132,77 @@ void loop() {
   }
 }
 
-void RotinagGSM4jSON(float I1, float I2, float I3) {
+//Routine for GSM Network connection
+int gsmConnectRoutine() {
 
+  int count = 0;
 
+  //GSM routine
 
-  //INICIALIZA json
+  while (sendATcommand(j1, r1, 400, 0) == 0) // AT+SAPBR=3,1,"APN","smart.m2m.vivo.com.br"
+  {
+    sendATcommand(j1, r1, 400, 0);
+    count ++;
+    if (count > 4)
+      return 0;
+  }
+  delay(1000);
+  count = 0;
+
+  while (sendATcommand(j2, r1, 400, 0) == 0) //AT+SAPBR=3,1,"USER","vivo"
+  {
+    count ++;
+    sendATcommand(j1, r1, 400, 0);
+    if (count > 4)
+      return 0;
+  }
+  delay(1000);
+  count = 0;
+
+  while (sendATcommand(j3, r1, 2400, 0) == 0) //AT+SAPBR=3,1,"PWD","vivo"
+  {
+    count++;
+    sendATcommand(j3, r1, 400, 0);
+    if (count > 4)
+      return 0;
+  }
+  delay(1000);
+  count = 0;
+
+  while (sendATcommand(j4, r1, 400, 0) == 0) //AT+SAPBR=3,1,"CONTYPE","GPRS"
+  {
+    count++;
+    sendATcommand(j4, r1, 400, 0);
+    if (count > 5)
+      return 0;
+  }
+  delay(1000);
+  count = 0;
+
+  while (sendATcommand(j5, r1, 6000, 0) == 0) //AT+SAPBR=1,1
+  {
+    count++;
+
+    sendATcommand(j7, r1, 6000, 0);
+    if (count > 2) {
+      return 0;
+    }
+  }
+  return 1;
+
+}
+
+//routine for HTTP Post method
+void HTTPpostRoutine(float I1, float I2, float I3) {
+
+  //Initializes JSON to be sent
 
 
   const size_t capacity = 2 * JSON_OBJECT_SIZE(3) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(7);
   DynamicJsonBuffer jsonBuffer(capacity);
 
   JsonObject& root = jsonBuffer.createObject();
-  root["meterId"] = "8218080148";
+  root["meterId"] = "fcc13";
   root["provider"] = "TRAJETO";
   root["epochTimestamp"] = "1546617761492";
 
@@ -190,120 +244,47 @@ void RotinagGSM4jSON(float I1, float I2, float I3) {
   value_combinedActivePower["valleyCharge"] = 0;
   value["lineFrequency"] = 60;
 
-//atualiza valores de corrente
+//updates Json with the measured values
   value_current["a"] = I1;
   value_current["b"] = I2;
   value_current["c"] = I3;
 
 
   //GET timestamp
-
   sendATcommand(s9, r1, 500, 1);
   root["epochTimestamp"] = timestamp;
-  //root.prettyPrintTo(Serial);
 
-  //RotinaGSM
+  //GET size of Json
+  int comprimentoJson = root.measureLength();
+  char str[30];
 
-  while (sendATcommand(j1, r1, 200, 0) == 0) // AT+SAPBR=3,1,"APN","smart.m2m.vivo.com.br"
-  {
+  //update HTTPDATA with sizeof JSON
+  sprintf(str, "AT+HTTPDATA=%d,2000", comprimentoJson);
+  Serial.println(String("***************") + timestamp + String("*************************"));
 
-    sendATcommand(j1, r1, 200, 0);
-  }
+
+
+  //HTTP routine
+  sendATcommand(h1, r1, 200, 0); //AT+HTTPINIT
   delay(1000);
-
-  while (sendATcommand(j2, r1, 200, 0) == 0) //AT+SAPBR=3,1,"USER","vivo"
-  {
-    sendATcommand(j1, r1, 200, 0);
-  }
+  sendATcommand(h9, r1, 200, 0); //AT+HTTPSSL=0
+  delay(100);
+  sendATcommand(h2, r1, 200, 0); //AT+HTTPPARA="CID",1
+  delay(500);
+  sendATcommand(h3, r1, 200, 0); //AT+HTTPPARA="URL","devsumersoft.dyndns.org:8580/endpoint/v1/metering"
   delay(1000);
-
-  while (sendATcommand(j3, r1, 200, 0) == 0) //AT+SAPBR=3,1,"PWD","vivo"
-  {
-    sendATcommand(j3, r1, 200, 0);
-  }
+  sendATcommand(h4, r1, 200, 0); //AT+HTTPPARA="CONTENT","application/json"
   delay(1000);
+  sendATcommand(str, r4, 200, 0);;//AT+HTTPDATA=
 
-
-  while (sendATcommand(j4, r1, 200, 0) == 0) //AT+SAPBR=3,1,"CONTYPE","GPRS"
-  {
-    sendATcommand(j4, r1, 200, 0);
-  }
-  delay(1000);
-
-  while (sendATcommand(j7, r1, 10000, 0) == 0) //AT+SAPBR=0,1
-  {
-    delay(1000);
-    sendATcommand(j7, r1, 10000, 0);
-  }
-  delay(1000);
-
-  while (sendATcommand(j5, r1, 6000, 0) == 0) //AT+SAPBR=1,1
-  {
-    sendATcommand(j5, r1, 6000, 0);
-  }
-  delay(1000);
-
-  while (sendATcommand(j6, r1, 200, 0) == 0) //AT+SAPBR=2,1
-  {
-    sendATcommand(j6, r1, 200, 0);
-  }
-  delay(1000);
-
-
-  while (sendATcommand(h1, r1, 200, 0) == 0) //AT+HTTPINIT
-  {
-    sendATcommand(h1, r1, 200, 0);
-  }
-  delay(1000);
-
-  while (sendATcommand(h9, r1, 200, 0) == 0) //AT+HTTPSSL=0
-  {
-    sendATcommand(h9, r1, 200, 0);
-  }
-  delay(1000);
-
-  while (sendATcommand(h2, r1, 200, 0) == 0) //AT+HTTPPARA="CID",1
-  {
-    sendATcommand(h2, r1, 200, 0);
-    delay(1000);
-  }
-  while (sendATcommand(h3, r1, 200, 0) == 0) //AT+HTTPPARA="URL","devsumersoft.dyndns.org:8580/endpoint/v1/metering"
-  {
-    sendATcommand(h3, r1, 200, 0);
-    delay(1000);
-  }
-  while (sendATcommand(h4, r1, 200, 0) == 0) //AT+HTTPPARA="CONTENT","application/json"
-  {
-    sendATcommand(h4, r1, 200, 0);
-    delay(1000);
-  }
-
-  while (sendATcommand(h5, r4, 200, 0) == 0) //AT+HTTPDATA=
-  {
-    sendATcommand(h5, r4, 200, 0);
-    delay(1000);
-  }
-  delay(5100);
-
-
-
-  while (sendATcommand(h7, r4, 200, false) == 0) //AT+HTTPREAD
-  {
-    sendATcommand(h7, r4, 200, 0);
-    delay(1000);
-  }
-
-  while (sendATcommand(h6, r1, 200, 0) == 0)
-  {
-    sendATcommand(h6, r1, 200, 0);
-    delay(5000);
-  }
-
-
+  root.printTo(mySerial);
+  delay(6000);
+  //sendATcommand(h7, r4, 4000, 0);  //AT+HTTPREAD
+  sendATcommand(h6, r1, 200, 0); //AT+HTTPACTION=1
+  delay(8000);
+  sendATcommand(h8, r1, 500, 0);
 
 }
-
-//rotina para thingspeak
 
 int RotinaGSM(char valor[]) {
 
@@ -371,8 +352,7 @@ int RotinaGSM(char valor[]) {
 
 
 }
-
-//envia os commandos AT para o modulo
+//function that receives a command and checks if the response is expected
 int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeout, int flag) {
   int i;
   uint8_t x = 0,  answer = 0;
@@ -407,6 +387,7 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
   while ((answer == 0) && ((millis() - previous) < timeout));
   Serial.println(response);
 
+  //for timestamp calculation (only when required)
   if (flag == 1) {
 
     int tm_year = (dateToDecimal(&response[19]) + 2000) - 1900;
@@ -457,10 +438,10 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
         tm_yday = 335 + dia;
         break;
     }
-    /*Serial.println(String("HORA:")+tm_hour);
-      Serial.println(String("MINUTO:")+tm_min);
-      Serial.println(String("SEGUNDO:")+tm_sec);
-      Serial.println(String("DIA DO ANO:")+tm_yday);
+    /*  Serial.println(String("HORA:") + tm_hour);
+      Serial.println(String("MINUTO:") + tm_min);
+      Serial.println(String("SEGUNDO:") + tm_sec);
+      Serial.println(String("DIA DO ANO:") + tm_yday);
       Serial.println();
       delay(1000);*/
 
@@ -468,13 +449,14 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
                 (tm_year - 70) * 31536000 + ((tm_year - 69) / 4) * 86400 -
                 ((tm_year - 1) / 100) * 86400 + ((tm_year + 299) / 400) * 86400;
 
-    //Serial.println(timestamp);
+    // Serial.println(timestamp);
   }
   return answer;
 
 
 }
-void resetGSM() //Reinicia o GSM
+//GSM module reset
+void resetGSM()
 {
   digitalWrite(9, 0);
   delay(2000);
@@ -517,6 +499,7 @@ bool enviar(float fase1, float fase2, float fase3) {
     }
   }
 }
+//converts an set of chars to int
 int dateToDecimal(char * date) {
   int value = ((date[0] - '0') * 10 + (date[1] - '0'));
   return value;
