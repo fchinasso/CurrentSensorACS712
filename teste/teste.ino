@@ -2,14 +2,14 @@
 #include <sensorCorrente.h>
 #include <SoftwareSerial.h>
 
-sensorCorrente s01(A3, T30A, 'D', '1'); //objetcs for each phase to be measured
+sensorCorrente s01(A3, T30A, 'D', '1'); //declarcao de objetos para cada fase
 sensorCorrente s02(A4, T30A, 'D', '2');
 sensorCorrente s03(A5, T30A, 'D', '3');
 
-
+char IdEquipamento[] = "f13";
 long timestamp;
 int intervalo = 2; //interval between each measure (seconds)
-float tempo = 0.3; //interval between each send (minutes)
+float tempo = 0.5; //interval between each send (minutes)
 
 SoftwareSerial mySerial(10, 11); // Serial comunication pins
 
@@ -68,19 +68,24 @@ void setup() {
   tempo = tempo * 1000 * 60;
 
   pinMode(9, OUTPUT);//GSM module Reset pin
-  digitalWrite(9, HIGH);
+  digitalWrite(9, LOW);
   resetGSM();
-  delay(5000);
+  delay(10000);
 
- //connects to GSM Network
+  //connects to GSM Network
   int check = gsmConnectRoutine();
+  int count = 0;
 
 
   while (check == 0) {
-    delay(3000);
-    resetGSM();
-    delay(3000);
     check = gsmConnectRoutine();
+    count ++;
+    if (count > 6) {
+
+      resetGSM();
+      count = 0;
+      delay(10000);
+    }
   }
 
 }
@@ -93,12 +98,13 @@ void loop() {
 
   int N = 0;
   bool flag = false;
+  int check;
 
   float I1 = 0;
   float I2 = 0;
   float I3 = 0;
 
-//main loop, measures and then send the values
+
   for (;;) {
 
     if (millis() - timer >= intervalo ) {
@@ -115,8 +121,16 @@ void loop() {
       I2 = I2 / N;
       I3 = I3 / N;
 
- //after the elapsed time the measures are sent
-      HTTPpostRoutine(I1, I2, I3);
+       //HTTPpostRoutine(I1, I2, I3);
+
+       flag = enviar(I1, I2, I3);
+         if (flag == true)
+         Serial.println(String("ENVIADO!"));
+         else {
+         Serial.println(String("***********ATENCAO********"));
+         Serial.println(String("******Falha no envio******"));
+         }
+
 
       I1 = 0;
       I2 = 0;
@@ -132,58 +146,55 @@ void loop() {
   }
 }
 
-//Routine for GSM Network connection
 int gsmConnectRoutine() {
 
   int count = 0;
+  int check = 0;
 
   //GSM routine
 
-  while (sendATcommand(j1, r1, 400, 0) == 0) // AT+SAPBR=3,1,"APN","smart.m2m.vivo.com.br"
-  {
-    sendATcommand(j1, r1, 400, 0);
-    count ++;
-    if (count > 4)
-      return 0;
+  check = sendATcommand(j1, r1, 400, 0);// AT+SAPBR=3,1,"APN","smart.m2m.vivo.com.br"
+
+  if (check == 0) {
+    return 0;
   }
+
+  delay(1000);
+
+
+  check = sendATcommand(j2, r1, 400, 0);//AT+SAPBR=3,1,"USER","vivo"
+
+  if (check == 0) {
+    return 0;
+  }
+
+  delay(1000);
+
+
+  check = sendATcommand(j3, r1, 400, 0); //AT+SAPBR=3,1,"PWD","vivo"
+
+  if (check == 0) {
+    return 0;
+  }
+
   delay(1000);
   count = 0;
 
-  while (sendATcommand(j2, r1, 400, 0) == 0) //AT+SAPBR=3,1,"USER","vivo"
-  {
-    count ++;
-    sendATcommand(j1, r1, 400, 0);
-    if (count > 4)
-      return 0;
+  check = sendATcommand(j4, r1, 400, 0); //AT+SAPBR=3,1,"CONTYPE","GPRS"
+
+  if (check == 0) {
+    return 0;
   }
+
   delay(1000);
   count = 0;
 
-  while (sendATcommand(j3, r1, 2400, 0) == 0) //AT+SAPBR=3,1,"PWD","vivo"
-  {
-    count++;
-    sendATcommand(j3, r1, 400, 0);
-    if (count > 4)
-      return 0;
-  }
-  delay(1000);
-  count = 0;
-
-  while (sendATcommand(j4, r1, 400, 0) == 0) //AT+SAPBR=3,1,"CONTYPE","GPRS"
-  {
-    count++;
-    sendATcommand(j4, r1, 400, 0);
-    if (count > 5)
-      return 0;
-  }
-  delay(1000);
-  count = 0;
-
-  while (sendATcommand(j5, r1, 6000, 0) == 0) //AT+SAPBR=1,1
+  while (sendATcommand(j5, r1, 5000, 0) == 0) //AT+SAPBR=1,1
   {
     count++;
 
-    sendATcommand(j7, r1, 6000, 0);
+    delay(3000);
+    sendATcommand(j7, r1, 5000, 0);
     if (count > 2) {
       return 0;
     }
@@ -192,17 +203,16 @@ int gsmConnectRoutine() {
 
 }
 
-//routine for HTTP Post method
-void HTTPpostRoutine(float I1, float I2, float I3) {
+int HTTPpostRoutine(float I1, float I2, float I3) {
 
-  //Initializes JSON to be sent
+  //INICIALIZA json
 
 
   const size_t capacity = 2 * JSON_OBJECT_SIZE(3) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(7);
   DynamicJsonBuffer jsonBuffer(capacity);
 
   JsonObject& root = jsonBuffer.createObject();
-  root["meterId"] = "lulalibre";
+  root["meterId"] = IdEquipamento;
   root["provider"] = "TRAJETO";
   root["epochTimestamp"] = "1546617761492";
 
@@ -244,7 +254,7 @@ void HTTPpostRoutine(float I1, float I2, float I3) {
   value_combinedActivePower["valleyCharge"] = 0;
   value["lineFrequency"] = 60;
 
-//updates Json with the measured values
+
   value_current["a"] = I1;
   value_current["b"] = I2;
   value_current["c"] = I3;
@@ -262,10 +272,31 @@ void HTTPpostRoutine(float I1, float I2, float I3) {
   sprintf(str, "AT+HTTPDATA=%d,2000", comprimentoJson);
   Serial.println(String("***************") + timestamp + String("*************************"));
 
-
+  int a = sendATcommand(j6, r1, 200, 2);
+  int count = 0;
+  if (a == 0) {
+    while (a == 0) {
+      gsmConnectRoutine();
+      a = sendATcommand(j6, r1, 200, 2);
+      count++;
+      if (count > 2) {
+        Serial.println(String("Resetando....."));
+        resetGSM();
+        count = 0;
+        delay(10000);
+      }
+    }
+  }
 
   //HTTP routine
-  sendATcommand(h1, r1, 200, 0); //AT+HTTPINIT
+  a = sendATcommand(h1, r1, 200, 0);//AT+HTTPINIT
+
+  if (a == 0) {
+    delay(1000);
+    sendATcommand(h8, r1, 500, 0); //AT+HTTPTERM
+    sendATcommand(h1, r1, 200, 0);//AT+HTTPINIT
+
+  }
   delay(1000);
   sendATcommand(h9, r1, 200, 0); //AT+HTTPSSL=0
   delay(100);
@@ -278,11 +309,30 @@ void HTTPpostRoutine(float I1, float I2, float I3) {
   sendATcommand(str, r4, 200, 0);;//AT+HTTPDATA=
 
   root.printTo(mySerial);
+
+
   delay(6000);
   //sendATcommand(h7, r4, 4000, 0);  //AT+HTTPREAD
+
+
   sendATcommand(h6, r1, 200, 0); //AT+HTTPACTION=1
-  delay(8000);
-  sendATcommand(h8, r1, 500, 0);
+
+
+  delay(10000);
+  //sendATcommands(h7,r1,1000,0);
+
+  a = sendATcommand(h8, r1, 500, 0); //AT+HTTPTERM
+  if (a == 0) {
+    resetGSM();
+
+  }
+
+
+
+
+
+
+
 
 }
 
@@ -451,13 +501,34 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
 
     // Serial.println(timestamp);
   }
+  if (flag == 2) {
+    int i = 0;
+
+    /* while (i < 50) {
+       Serial.println(i + String("=") + response[i]);
+       i++;
+      }*/
+
+    if (response[25] - '0' == 1) {
+      return 1;
+    }
+
+    if (response[25] - '0' == 3)
+      return 0;
+
+
+
+
+
+
+  }
   return answer;
 
 
 }
-//GSM module reset
-void resetGSM()
+void resetGSM() //GSM reset
 {
+  Serial.println(String("Resetando....."));
   digitalWrite(9, 0);
   delay(2000);
   digitalWrite(9, 1);
