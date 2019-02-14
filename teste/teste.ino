@@ -73,11 +73,11 @@ void setup() {
   delay(10000);
 
   //connects to GSM Network
-  int check = gsmConnectRoutine();
+  //int check = gsmConnectRoutine();
   int count = 0;
 
 
-  while (check == 0) {
+  /*while (check == 0) {
     check = gsmConnectRoutine();
     count ++;
     if (count > 6) {
@@ -86,7 +86,7 @@ void setup() {
       count = 0;
       delay(10000);
     }
-  }
+    }*/
 
 }
 
@@ -121,15 +121,15 @@ void loop() {
       I2 = I2 / N;
       I3 = I3 / N;
 
-       //HTTPpostRoutine(I1, I2, I3);
+      // HTTPpostRoutine(I1, I2, I3);
 
-       flag = enviar(I1, I2, I3);
-         if (flag == true)
-         Serial.println(String("ENVIADO!"));
-         else {
-         Serial.println(String("***********ATENCAO********"));
-         Serial.println(String("******Falha no envio******"));
-         }
+      flag = enviar(I1, I2, I3);
+      if (flag == true)
+        Serial.println(String("ENVIADO!"));
+      else {
+        Serial.println(String("***********ATENCAO********"));
+        Serial.println(String("******Falha no envio******"));
+      }
 
 
       I1 = 0;
@@ -280,7 +280,6 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
       a = sendATcommand(j6, r1, 200, 2);
       count++;
       if (count > 2) {
-        Serial.println(String("Resetando....."));
         resetGSM();
         count = 0;
         delay(10000);
@@ -338,48 +337,64 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
 
 int RotinaGSM(char valor[]) {
 
-  int cont = 0;
+  int count = 0;
+  int check;
 
-
-  while (sendATcommand(s1, r1, 200, 0) == 0) // AT
-  {
-    sendATcommand(s1, r1, 200, 0);
+  check = sendATcommand(s1, r1, 200, 0); // AT
+  while (check == 0) {
+    count++;
+    check = sendATcommand(s1, r1, 200, 0);
+    if (count > 4)
+      return 0;
   }
   delay(1000);
+  count = 0;
 
-
-  while (sendATcommand(s8, r1, 200, 0) == 0) // CIPSHUT
+  check = sendATcommand(s8, r1, 200, 0); // CIPSHUT
+  while (check == 0)
   {
-    delay(1000);
-    sendATcommand(s8, r1, 200, 0);
+    count++;
+    check = sendATcommand(s8, r1, 200, 0);
+    if (count > 4)
+      return 0;
   }
   delay(2000);
+  count = 0;
 
-  while (sendATcommand(s3, r1, 200, 0) == 0) //AT+CSTT=\"smart.m2m.vivo.com.br\",\"vivo\",\"vivo\"
+
+  check = sendATcommand(s3, r1, 200, 0); //AT+CSTT=\"smart.m2m.vivo.com.br\",\"vivo\",\"vivo\"
+  while (check == 0)
   {
-    delay(1000);
-    sendATcommand(s3, r1, 200, 0);
+    count++;
+    check = sendATcommand(s3, r1, 200, 0);
+    if (count > 4)
+      return 0;
   }
   delay(2000);
+  count = 0;
 
-  while (sendATcommand(s8, r1, 200, 0) == 0) // CIPSHUT
+  check = sendATcommand(s8, r1, 200, 0); // CIPSHUT
+  while (check == 0)
   {
-    delay(1000);
-    sendATcommand(s8, r1, 200, 0);
+    count++;
+    check = sendATcommand(s8, r1, 200, 0);
+    if (count > 4)
+      return 0;
   }
   delay(2000);
+  count = 0;
 
-  while (sendATcommand(s4, r2, 5000, 0) == 0) // AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80
+
+  check = sendATcommand(s4, r2, 5000, 0); // AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80
+  while (check == 0)
   {
-    delay(1000);
-    sendATcommand(s4, r2, 5000, 0);
-    cont++;
-    if (cont > 4) {
-      resetGSM();
+    count++;
+    check = sendATcommand(s4, r2, 5000, 0);
+    if (count > 4) {
       return 0 ;
     }
   }
-  cont = 0;
+  count = 0;
   delay(2000);
 
   sendATcommand(s5, r1, 2000, 0);     // AT+CIPSEND=
@@ -387,13 +402,13 @@ int RotinaGSM(char valor[]) {
 
   sendATcommand(valor, r1, 2000, 0);     //GET /update?api_key=9EZ3TG966X160QBN&field1=corrente
   delay(2000);
+  count = 0;
 
   while (sendATcommand(s7, r3, 200, 0) == 0) //AT+CIPCLOSE
   {
+    count++;
     sendATcommand(s7, r3, 200, 0);
-    cont++;
-    if (cont > 4) {
-      resetGSM();
+    if (count > 4) {
       return 0 ;
     }
   }
@@ -538,7 +553,7 @@ void resetGSM() //GSM reset
 bool enviar(float fase1, float fase2, float fase3) {
 
   int count = 0;
-  bool flag = false;
+  int flag = 0;
 
   char f1[15];
   char f2[15];
@@ -554,14 +569,15 @@ bool enviar(float fase1, float fase2, float fase3) {
 
 
 
-  while (flag == false) {//verifica se realizou
+  while (flag == 0) {//verifica se realizou
 
-    if (flag == false) {
+    if (flag == 0) {
       flag = RotinaGSM(str);
       count++;
     }
     if (count > 3) {
       free(str);
+      resetGSM();
       return false;
     }
     if (flag == 1) {
