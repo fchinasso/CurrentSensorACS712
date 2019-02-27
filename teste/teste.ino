@@ -1,3 +1,5 @@
+#include <Time.h>
+#include <TimeLib.h>
 #include <ArduinoJson.h>
 #include <sensorCorrente.h>
 #include <SoftwareSerial.h>
@@ -6,8 +8,8 @@ sensorCorrente s01(A3, T30A, 'D', '1'); //declarcao de objetos para cada fase
 sensorCorrente s02(A4, T30A, 'D', '2');
 sensorCorrente s03(A5, T30A, 'D', '3');
 
-char IdEquipamento[] = "f13";
-long timestamp;
+char IdEquipamento[] = "f1313";
+time_t timestamp;
 int intervalo = 2; //interval between each measure (seconds)
 float tempo = 0.5; //interval between each send (minutes)
 
@@ -73,11 +75,11 @@ void setup() {
   delay(10000);
 
   //connects to GSM Network
-  //int check = gsmConnectRoutine();
+  int check = gsmConnectRoutine();
   int count = 0;
 
 
-  /*while (check == 0) {
+  while (check == 0) {
     check = gsmConnectRoutine();
     count ++;
     if (count > 6) {
@@ -86,7 +88,7 @@ void setup() {
       count = 0;
       delay(10000);
     }
-    }*/
+  }
 
 }
 
@@ -121,15 +123,15 @@ void loop() {
       I2 = I2 / N;
       I3 = I3 / N;
 
-      // HTTPpostRoutine(I1, I2, I3);
+      HTTPpostRoutine(I1, I2, I3);
 
-      flag = enviar(I1, I2, I3);
-      if (flag == true)
+      /*flag = enviar(I1, I2, I3);
+        if (flag == true)
         Serial.println(String("ENVIADO!"));
-      else {
+        else {
         Serial.println(String("***********ATENCAO********"));
         Serial.println(String("******Falha no envio******"));
-      }
+        }*/
 
 
       I1 = 0;
@@ -264,6 +266,7 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
   sendATcommand(s9, r1, 500, 1);
   root["epochTimestamp"] = timestamp;
 
+  //root.printTo(Serial);
   //GET size of Json
   int comprimentoJson = root.measureLength();
   char str[30];
@@ -314,16 +317,14 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
   //sendATcommand(h7, r4, 4000, 0);  //AT+HTTPREAD
 
 
-  sendATcommand(h6, r1, 200, 0); //AT+HTTPACTION=1
+  sendATcommand(h6, r1, 6000, 0); //AT+HTTPACTION=1
 
 
-  delay(10000);
-  //sendATcommands(h7,r1,1000,0);
+  delay(5000);
 
-  a = sendATcommand(h8, r1, 500, 0); //AT+HTTPTERM
+  a = sendATcommand(h8, r1, 2000, 0); //AT+HTTPTERM
   if (a == 0) {
     resetGSM();
-
   }
 
 
@@ -340,17 +341,9 @@ int RotinaGSM(char valor[]) {
   int count = 0;
   int check;
 
-  check = sendATcommand(s1, r1, 200, 0); // AT
-  while (check == 0) {
-    count++;
-    check = sendATcommand(s1, r1, 200, 0);
-    if (count > 4)
-      return 0;
-  }
-  delay(1000);
-  count = 0;
 
   check = sendATcommand(s8, r1, 200, 0); // CIPSHUT
+
   while (check == 0)
   {
     count++;
@@ -386,15 +379,6 @@ int RotinaGSM(char valor[]) {
 
 
   check = sendATcommand(s4, r2, 5000, 0); // AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80
-  while (check == 0)
-  {
-    count++;
-    check = sendATcommand(s4, r2, 5000, 0);
-    if (count > 4) {
-      return 0 ;
-    }
-  }
-  count = 0;
   delay(2000);
 
   sendATcommand(s5, r1, 2000, 0);     // AT+CIPSEND=
@@ -455,66 +439,29 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
   //for timestamp calculation (only when required)
   if (flag == 1) {
 
-    int tm_year = (dateToDecimal(&response[19]) + 2000) - 1900;
+
     int mes = dateToDecimal(&response[22]);
     int dia = dateToDecimal(&response[25]);
-    int tm_hour = dateToDecimal(&response[28]);
-    int tm_min = dateToDecimal(&response[31]);
-    int tm_sec = dateToDecimal(&response[34]);
-    int tm_yday;
+    int hora= dateToDecimal(&response[28]);
+    int minuto = dateToDecimal(&response[31]);
+    int segundo = dateToDecimal(&response[34]);
+    int ano = dateToDecimal(&response[19]);
 
 
-    switch (mes) {
 
-      case 1:
-        tm_yday = dia;
-        break;
-      case 2:
-        tm_yday = 31 + dia;
-        break;
-      case 3:
-        tm_yday = 60 + dia;
-        break;
-      case 4:
-        tm_yday = 91 + dia;
-        break;
-      case 5:
-        tm_yday = 121 + dia;
-        break;
-      case 6:
-        tm_yday = 152 + dia;
-        break;
-      case 7:
-        tm_yday = 182 + dia;
-        break;
-      case 8:
-        tm_yday = 213 + dia;
-        break;
-      case 9:
-        tm_yday = 244 + dia;
-        break;
-      case 10:
-        tm_yday = 274 + dia;
-        break;
-      case 11:
-        tm_yday = 305 + dia;
-        break;
-      case 12:
-        tm_yday = 335 + dia;
-        break;
-    }
-    /*  Serial.println(String("HORA:") + tm_hour);
-      Serial.println(String("MINUTO:") + tm_min);
-      Serial.println(String("SEGUNDO:") + tm_sec);
-      Serial.println(String("DIA DO ANO:") + tm_yday);
-      Serial.println();
-      delay(1000);*/
+    /*Serial.println(String("HORA:") + tm_hour);
+    Serial.println(String("MINUTO:") + tm_min);
+    Serial.println(String("SEGUNDO:") + tm_sec);
+    Serial.println(String("DIA DO ANO:") + tm_yday);
+    Serial.println(String("ANO:") + tm_year);
+    Serial.println();
+    delay(1000);*/
 
-    timestamp = tm_sec + tm_min * 60 + tm_hour * 3600 + tm_yday * 86400 +
-                (tm_year - 70) * 31536000 + ((tm_year - 69) / 4) * 86400 -
-                ((tm_year - 1) / 100) * 86400 + ((tm_year + 299) / 400) * 86400;
+    setTime(hora,minuto,segundo,dia,mes,ano);
+    timestamp=now();
 
-    // Serial.println(timestamp);
+
+
   }
   if (flag == 2) {
     int i = 0;
