@@ -4,12 +4,13 @@
 #include <sensorCorrente.h>
 #include <SoftwareSerial.h>
 
-sensorCorrente s01(A3, T30A, 'D', '1'); //declarcao de objetos para cada fase
-sensorCorrente s02(A4, T30A, 'D', '2');
-sensorCorrente s03(A5, T30A, 'D', '3');
+sensorCorrente s01(A3, T30A, 'A', '1'); //declarcao de objetos para cada fase
+sensorCorrente s02(A4, T30A, 'A', '2');
+sensorCorrente s03(A5, T30A, 'A', '3');
 
-char IdEquipamento[] = "f1313";
-time_t timestamp;
+char IdEquipamento[] = "fcc1";
+unsigned long timestamp;
+
 int intervalo = 2; //interval between each measure (seconds)
 float tempo = 0.5; //interval between each send (minutes)
 
@@ -37,7 +38,7 @@ char j7[] = "AT+SAPBR=0,1";
 
 char h1[] = "AT+HTTPINIT";
 char h2[] = "AT+HTTPPARA=\"CID\",1";
-char h3[] = "AT+HTTPPARA=\"URL\",\"devsumersoft.dyndns.org:8580/endpoint/v1/metering\"";
+char h3[] = "AT+HTTPPARA=\"URL\",\"http://eletry.sumersoft.com:4443/endpoint/v1/metering\"";
 char h4[] = "AT+HTTPPARA=\"CONTENT\",\"application/json\"";
 char h5[] = "AT+HTTPDATA=";
 char h6[] = "AT+HTTPACTION=1";
@@ -207,6 +208,15 @@ int gsmConnectRoutine() {
 
 int HTTPpostRoutine(float I1, float I2, float I3) {
 
+
+  //GET timestamp
+
+  String timestampJSON;
+  String timestampS;
+  sendATcommand(s9, r1, 500, 1);
+  timestampS = String(timestamp);
+  timestampJSON = timestampS + '0' + '0' + '0';
+
   //INICIALIZA json
 
 
@@ -216,7 +226,7 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
   JsonObject& root = jsonBuffer.createObject();
   root["meterId"] = IdEquipamento;
   root["provider"] = "TRAJETO";
-  root["epochTimestamp"] = "1546617761492";
+  root["epochTimestamp"] = timestampJSON;
 
   JsonObject& value = root.createNestedObject("value");
 
@@ -262,18 +272,14 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
   value_current["c"] = I3;
 
 
-  //GET timestamp
-  sendATcommand(s9, r1, 500, 1);
-  root["epochTimestamp"] = timestamp;
 
-  //root.printTo(Serial);
   //GET size of Json
   int comprimentoJson = root.measureLength();
   char str[30];
 
   //update HTTPDATA with sizeof JSON
   sprintf(str, "AT+HTTPDATA=%d,2000", comprimentoJson);
-  Serial.println(String("***************") + timestamp + String("*************************"));
+
 
   int a = sendATcommand(j6, r1, 200, 2);
   int count = 0;
@@ -320,7 +326,7 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
   sendATcommand(h6, r1, 6000, 0); //AT+HTTPACTION=1
 
 
-  delay(5000);
+  delay(10000);
 
   a = sendATcommand(h8, r1, 2000, 0); //AT+HTTPTERM
   if (a == 0) {
@@ -442,7 +448,7 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
 
     int mes = dateToDecimal(&response[22]);
     int dia = dateToDecimal(&response[25]);
-    int hora= dateToDecimal(&response[28]);
+    int hora = dateToDecimal(&response[28]);
     int minuto = dateToDecimal(&response[31]);
     int segundo = dateToDecimal(&response[34]);
     int ano = dateToDecimal(&response[19]);
@@ -450,15 +456,17 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
 
 
     /*Serial.println(String("HORA:") + tm_hour);
-    Serial.println(String("MINUTO:") + tm_min);
-    Serial.println(String("SEGUNDO:") + tm_sec);
-    Serial.println(String("DIA DO ANO:") + tm_yday);
-    Serial.println(String("ANO:") + tm_year);
-    Serial.println();
-    delay(1000);*/
+      Serial.println(String("MINUTO:") + tm_min);
+      Serial.println(String("SEGUNDO:") + tm_sec);
+      Serial.println(String("DIA DO ANO:") + tm_yday);
+      Serial.println(String("ANO:") + tm_year);
+      Serial.println();
+      delay(1000);*/
 
-    setTime(hora,minuto,segundo,dia,mes,ano);
-    timestamp=now();
+    setTime(hora, minuto, segundo, dia, mes, ano);
+
+    timestamp = now();
+
 
 
 
