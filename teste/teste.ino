@@ -4,11 +4,11 @@
 #include <sensorCorrente.h>
 #include <SoftwareSerial.h>
 
-sensorCorrente s01(A3, T30A, 'A', '1'); //declarcao de objetos para cada fase
+sensorCorrente s01(A3, T30A, 'A', '1'); //objets for each current sensor
 sensorCorrente s02(A4, T30A, 'A', '2');
 sensorCorrente s03(A5, T30A, 'A', '3');
 
-char IdEquipamento[] = "fcc1";
+char IdEquipamento[] = "fcc1"; //equipment ID
 unsigned long timestamp;
 
 int intervalo = 2; //interval between each measure (seconds)
@@ -67,7 +67,7 @@ void setup() {
     s02.printCalibrar();
     s03.printCalibrar();*/
 
-  intervalo = intervalo * 1000;
+  intervalo = intervalo * 1000; // converts intervals to milliseconds
   tempo = tempo * 1000 * 60;
 
   pinMode(9, OUTPUT);//GSM module Reset pin
@@ -101,25 +101,24 @@ void loop() {
 
   int N = 0;
   bool flag = false;
-  int check;
 
   float I1 = 0;
   float I2 = 0;
   float I3 = 0;
 
 
-  for (;;) {
+  for (;;) {            //main routine
 
     if (millis() - timer >= intervalo ) {
 
-      I1 += s01.medir();
+      I1 += s01.medir(); //gets a measure for each current sensor on the predetermined interval
       I2 += s02.medir();
       I3 += s03.medir();
 
       timer = millis();
       N++;
     }
-    if (millis() - inicio >= tempo) {
+    if (millis() - inicio >= tempo) { //stars the routine for JSON packet sent
       I1 = I1 / N;
       I2 = I2 / N;
       I3 = I3 / N;
@@ -154,7 +153,7 @@ int gsmConnectRoutine() {
   int count = 0;
   int check = 0;
 
-  //GSM routine
+  //GSM  Network routine
 
   check = sendATcommand(j1, r1, 400, 0);// AT+SAPBR=3,1,"APN","smart.m2m.vivo.com.br"
 
@@ -208,18 +207,17 @@ int gsmConnectRoutine() {
 
 int HTTPpostRoutine(float I1, float I2, float I3) {
 
+   //HTTP post routine
+
 
   //GET timestamp
-
   String timestampJSON;
   String timestampS;
   sendATcommand(s9, r1, 500, 1);
   timestampS = String(timestamp);
   timestampJSON = timestampS + '0' + '0' + '0';
 
-  //INICIALIZA json
-
-
+  //Serialize Json
   const size_t capacity = 2 * JSON_OBJECT_SIZE(3) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(7);
   DynamicJsonBuffer jsonBuffer(capacity);
 
@@ -280,7 +278,7 @@ int HTTPpostRoutine(float I1, float I2, float I3) {
   //update HTTPDATA with sizeof JSON
   sprintf(str, "AT+HTTPDATA=%d,2000", comprimentoJson);
 
-
+//checks IP, with IP can't be confirmed, it reconnects via gsmConnectRoutine
   int a = sendATcommand(j6, r1, 200, 2);
   int count = 0;
   if (a == 0) {
@@ -414,7 +412,7 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
   char response[100];
   unsigned long previous;
 
-  memset(response, '\0', 100);    //Inicializa a string
+  memset(response, '\0', 100);    //initializes string
 
   delay(100);
 
@@ -463,7 +461,7 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
       Serial.println();
       delay(1000);*/
 
-    setTime(hora, minuto, segundo, dia, mes, ano);
+    setTime(hora+3, minuto, segundo, dia, mes, ano);
 
     timestamp = now();
 
@@ -471,6 +469,7 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
 
 
   }
+  //checks IP via at+sapbr=2,1
   if (flag == 2) {
     int i = 0;
 
@@ -486,22 +485,19 @@ int8_t sendATcommand(char* ATcommand, char* expected_answer1, unsigned int timeo
     if (response[25] - '0' == 3)
       return 0;
 
-
-
-
-
-
   }
   return answer;
 
-
 }
+
 void resetGSM() //GSM reset
 {
   Serial.println(String("Resetando....."));
   digitalWrite(9, 0);
   delay(2000);
   digitalWrite(9, 1);
+
+
 
 }
 
